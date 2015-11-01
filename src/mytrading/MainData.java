@@ -1,35 +1,62 @@
 package mytrading;
-
 import com.ib.client.*;
 import com.sun.org.apache.xpath.internal.SourceTree;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Vector;
 
 public class MainData implements EWrapper{
-    private int orderId = 0;
     private EClientSocket client = null;
-    private double lastPrice =0.0;     // siia saab muutujaid, mis võtavad meetoditest datat
+    double controlPrice =0.0, keskmine, stdev;
     int i =0;
-    double [] a = new double[6];
+    double [][] histPrices = new double[10][30];                                      // first is no of tickers, second no of days
+    double [] lastPrice = new double [10];                                            // size is no of tickers
+    String symbol;
+    int tickerID = 0;
+    String [] tickers = {"AAPL","IBM","GOOGL", "ORCL", "AMZN", "FB", "TWTR","NFLX", "TSLA","BABA"};       // ticker entry here
+
 
     public MainData (){
-        EClientSocket client = new EClientSocket(this);
-        client.eConnect(null, 7496, 0);
+        EClientSocket client = new EClientSocket(this);         //standard process
+        client.eConnect(null, 7496, 0);                         //creates connection
 
         try
         {
-            Thread.sleep (2000);
+            Thread.sleep (2000);                                //paus until connection confirmed with klick
             while (! (client.isConnected()));
         } catch (Exception e)
         {
-
         }
 
-        String [] tickerid = {"AAPL","IBM","GOOGL"};
-        String symbol;
-        for (int j=0; j<3; j++) {
-            symbol = tickerid[j];
+        long startTime;
+        long endTime;
+        double time;
+        startTime= System.currentTimeMillis();
+
+        dataReq(client);                                        //meetod dataReq
+
+        endTime= System.currentTimeMillis();
+        time = (endTime - startTime)/1000.0;
+        System.out.println("Info request took: "+time +" seconds");
+
+
+        arvutused();                                            //meetod arvutused
+
+        System.out.println("protsessi lõpp");
+        client.eDisconnect();                                   //disconnects here
+
+
+
+    }
+    public void dataReq(EClientSocket client){
+
+        String date = new SimpleDateFormat("yyyyMMdd HH:mm:ss").format(new Date());
+
+        for (int j=0; j<tickers.length; j++) {
+            symbol = tickers[j];
 
             Contract contract = new Contract();
             contract.m_symbol = symbol;
@@ -37,59 +64,103 @@ public class MainData implements EWrapper{
             contract.m_exchange = "SMART";
             contract.m_currency = "USD";
             Vector<TagValue> XYZ = new Vector<TagValue>();
-            int tickerID = 10000001;
-            client.reqHistoricalData(tickerID, contract, "20151022 22:30:00", "5 D", "1 day", "TRADES", 1, 1, XYZ);
-            //int tickerID = 10000002;
-            // client.reqContractDetails(tickerID, contract);
+            client.reqHistoricalData(tickerID, contract, date, "30 D", "1 day", "TRADES", 1, 1, XYZ);
 
-            try {
-                if (lastPrice != -1.0) {
-                    Thread.sleep(1000);
+            Vector mktDataOptions = new Vector();
+            client.reqMktData(tickerID, contract, null, true, mktDataOptions);
+
+            for (int i = 0; i < 20; i++) {
+
+                try {
+                    if (controlPrice != -1.0) {
+                        Thread.sleep(100);
+                    }
+                } catch (Exception e) {
+
                 }
-            } catch (InterruptedException e) {
             }
 
-            arvutused(symbol);
+            tickerID=tickerID+1;
             i=0;
-            lastPrice=0.0;
+            controlPrice=0.0;
+
         }
-        System.out.println("protsessi lõpp");
 
-        client.eDisconnect();
+        for (int i = 0; i < 50; i++) {
 
+            try {
+                if (lastPrice[lastPrice.length]== 0.0) {
+                    Thread.sleep(100);
+                }
+            } catch (Exception e) {
 
-
+            }
+        }
     }
-    public void arvutused(String symbol){
-        double keskmine;
-        keskmine =( a[0]+a[1]+a[2]+a[3]+a[4])/5;
-        System.out.println("Keskmine hind aktsial "+symbol+" on "+keskmine);
 
+    public void arvutused(){
+
+        double summa = 0;
+        double summa2= 0;
+
+        for (int j = 0; j <tickers.length ; j++) {
+            symbol = tickers[j] ;
+            tickerID = j;
+
+            for (int k = 0; k <histPrices[0].length ; k++) {
+                double element = histPrices [tickerID][k];
+                summa += element;
+            }
+
+            keskmine = summa / histPrices[0].length;
+
+            for (int k = 0; k <histPrices[0].length ; k++) {
+                double element = (histPrices [tickerID][k] - keskmine)*(histPrices [tickerID][k] - keskmine);
+                summa2 += element;
+            }
+
+            stdev = Math.sqrt(summa2 / (histPrices[0].length-1 ));
+
+            double maxLimit = keskmine + 1.5*stdev;
+            double minLimit = keskmine - 1.5*stdev;
+
+            if (lastPrice[tickerID]< minLimit){
+                System.out.println("Osta "+ symbol + " aktsiat hinnaga "+ lastPrice[tickerID]);
+            } else if (lastPrice[tickerID]> maxLimit){
+                System.out.println("Müü "+ symbol + " aktsiat hinnaga "+ lastPrice[tickerID]);
+            }
+
+            //System.out.println("Keskmine hind aktsial " + symbol + " on " + keskmine + " ja stdev on "+ stdev + " viimane hind on " + lastPrice[tickerID]);
+            summa = 0;
+            summa2 = 0;
+        }
     }
 
     public void historicalData(int reqId, String date, double open, double high, double low, double close, int volume, int count, double WAP, boolean hasGaps) {
-
-        a[i]= close;
-        i++;
-        lastPrice = close;
+        if (close!= -1.0){
+            histPrices[tickerID][i]= close;
+            i++;}
+        else {
+            controlPrice=close;
+        }
     }
 
+    public void tickPrice(int tickerId, int field, double price, int canAutoExecute) {
+        if (field==4){
+            lastPrice[tickerId]=price;
+        }
+        if (lastPrice[tickerID]==0 && field==9){
+            lastPrice[tickerId]=price;
+        }
 
+
+    }
 
     public void contractDetails(int reqId, ContractDetails contractDetails) {
-        System.out.println(reqId);
-        System.out.println("sain katte");
 
     }
     public void contractDetailsEnd(int reqId)
     {
-        System.out.println("thats all");
-
-    }
-
-
-    @Override
-    public void tickPrice(int tickerId, int field, double price, int canAutoExecute) {
 
     }
 
@@ -323,8 +394,6 @@ public class MainData implements EWrapper{
         {
             e.printStackTrace ();
         }
-
-        System.out.println("protsessi lopp2");
 
     }
 
