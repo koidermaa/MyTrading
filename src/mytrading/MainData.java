@@ -10,14 +10,13 @@ import java.util.Vector;
 
 public class MainData implements EWrapper{
     private EClientSocket client = null;
-    double controlPrice =0.0, keskmine, stdev;
+    double controlPrice =0.0, keskmine, stdev, control=0.0;
     int i =0;
     double [][] histPrices = new double[10][30];                                      // first is no of tickers, second no of days
     double [] lastPrice = new double [10];                                            // size is no of tickers
     String symbol;
     int tickerID = 0;
     String [] tickers = {"AAPL","IBM","GOOGL", "ORCL", "AMZN", "FB", "TWTR","NFLX", "TSLA","BABA"};       // ticker entry here
-
 
     public MainData (){
         EClientSocket client = new EClientSocket(this);         //standard process
@@ -27,12 +26,10 @@ public class MainData implements EWrapper{
         {
             Thread.sleep (2000);                                //paus until connection confirmed with klick
             while (! (client.isConnected()));
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
         }
 
-        long startTime;
-        long endTime;
+        long startTime, endTime;
         double time;
         startTime= System.currentTimeMillis();
 
@@ -42,15 +39,12 @@ public class MainData implements EWrapper{
         time = (endTime - startTime)/1000.0;
         System.out.println("Info request took: "+time +" seconds");
 
-
         arvutused();                                            //meetod arvutused
 
         System.out.println("protsessi lõpp");
         client.eDisconnect();                                   //disconnects here
-
-
-
     }
+
     public void dataReq(EClientSocket client){
 
         String date = new SimpleDateFormat("yyyyMMdd HH:mm:ss").format(new Date());
@@ -69,31 +63,17 @@ public class MainData implements EWrapper{
             Vector mktDataOptions = new Vector();
             client.reqMktData(tickerID, contract, null, true, mktDataOptions);
 
-            for (int i = 0; i < 20; i++) {
-
-                try {
-                    if (controlPrice != -1.0) {
-                        Thread.sleep(100);
-                    }
-                } catch (Exception e) {
-
-                }
-            }
-
             tickerID=tickerID+1;
-            i=0;
-            controlPrice=0.0;
-
         }
 
-        for (int i = 0; i < 50; i++) {
-
+        for (double i = 0; i < 100; i++) {
             try {
-                if (lastPrice[lastPrice.length]== 0.0) {
+                if (control== 0.0 || controlPrice == 0.0) {
                     Thread.sleep(100);
+                    //double sekundid = i/10;
+                    //System.out.println(sekundid+ " sek");                 //saab timeri jooksma panna
                 }
             } catch (Exception e) {
-
             }
         }
     }
@@ -138,22 +118,27 @@ public class MainData implements EWrapper{
 
     public void historicalData(int reqId, String date, double open, double high, double low, double close, int volume, int count, double WAP, boolean hasGaps) {
         if (close!= -1.0){
-            histPrices[tickerID][i]= close;
+            histPrices[reqId][i]= close;
             i++;}
         else {
-            controlPrice=close;
+            i=0;
         }
+        if (reqId == tickers.length-1 && close== -1.0){
+            controlPrice = 1.0;
+            System.out.println("ajalugu käes");}
     }
 
     public void tickPrice(int tickerId, int field, double price, int canAutoExecute) {
         if (field==4){
             lastPrice[tickerId]=price;
         }
-        if (lastPrice[tickerID]==0 && field==9){
+        if (lastPrice[tickerId]==0 && field==9){
             lastPrice[tickerId]=price;
         }
-
-
+        if (tickerId == tickers.length-1&& field==9){
+            control = 1.0;
+            System.out.println("hinnad käes");
+        }
     }
 
     public void contractDetails(int reqId, ContractDetails contractDetails) {
