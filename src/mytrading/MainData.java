@@ -1,6 +1,5 @@
 package mytrading;
 import com.ib.client.*;
-import com.sun.org.apache.xpath.internal.SourceTree;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -16,7 +15,7 @@ public class MainData implements EWrapper{
     double [] lastPrice = new double [10];                                            // size is no of tickers
     String symbol;
     int tickerID = 0;
-    String [] tickers = {"AAPL","IBM","GOOGL", "ORCL", "AMZN", "FB", "TWTR","NFLX", "TSLA","BABA"};       // ticker entry here
+    String [] tickers = {"AAPL","IBM","JPM", "ORCL", "AMZN", "FB", "TWTR","NFLX", "TSLA","BABA"};       // ticker entry here
 
     public MainData (){
         EClientSocket client = new EClientSocket(this);         //standard process
@@ -39,7 +38,9 @@ public class MainData implements EWrapper{
         time = (endTime - startTime)/1000.0;
         System.out.println("Info request took: "+time +" seconds");
 
+
         arvutused();                                            //meetod arvutused
+        rsiArvutused();
 
         System.out.println("protsessi lõpp");
         client.eDisconnect();                                   //disconnects here
@@ -80,10 +81,9 @@ public class MainData implements EWrapper{
 
     public void arvutused(){
 
-        double summa = 0;
-        double summa2= 0;
-
         for (int j = 0; j <tickers.length ; j++) {
+            double summa = 0;
+            double summa2= 0;
             symbol = tickers[j] ;
             tickerID = j;
 
@@ -111,9 +111,33 @@ public class MainData implements EWrapper{
             }
 
             //System.out.println("Keskmine hind aktsial " + symbol + " on " + keskmine + " ja stdev on "+ stdev + " viimane hind on " + lastPrice[tickerID]);
-            summa = 0;
-            summa2 = 0;
         }
+    }
+
+    public void rsiArvutused(){
+        for (int j = 0; j <tickers.length ; j++) {
+            double summa3=0, summa4=0;
+            symbol = tickers[j];
+            tickerID = j;
+            for (int k = 0; k < 14; k++) {
+                int algusKoht = histPrices[0].length-14;
+                double vahe = histPrices[tickerID][algusKoht+k]-histPrices[tickerID][algusKoht+k-1];
+                if (vahe >= 0.0){
+                    summa3 += vahe;
+                }
+                if (vahe < 0.0){
+                    summa4 += vahe;
+                }
+            }
+            double RSI = 100 - (100/(1-summa3/summa4));
+            //System.out.println(symbol + " RSI on " + RSI+"  "+ summa3 + "  "+summa4);
+            if (RSI< 30) {
+                System.out.println("osta "+symbol +" RSI on ju "+ RSI);
+            } else if (RSI> 70) {
+                System.out.println("müü "+symbol +" RSI on ju " + RSI);
+            }
+        }
+
     }
 
     public void historicalData(int reqId, String date, double open, double high, double low, double close, int volume, int count, double WAP, boolean hasGaps) {
@@ -123,6 +147,7 @@ public class MainData implements EWrapper{
         else {
             i=0;
         }
+
         if (reqId == tickers.length-1 && close== -1.0){
             controlPrice = 1.0;
             System.out.println("ajalugu käes");}
