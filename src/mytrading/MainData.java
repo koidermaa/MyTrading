@@ -11,19 +11,21 @@ public class MainData implements EWrapper{
     private EClientSocket client = null;
     double controlPrice =0.0, keskmine, stdev, control=0.0;
     int i =0;
-    double [][] histPrices = new double[10][30];                                      // first is no of tickers, second no of days
-    double [] lastPrice = new double [10];                                            // size is no of tickers
+    double [][] histPrices = new double[11][30];                                      // first is no of tickers, second no of days
+    double [] lastPrice = new double [11];                                            // size is no of tickers
     String symbol;
     int tickerID = 0;
-    String [] tickers = {"AAPL","IBM","JPM", "ORCL", "AMZN", "FB", "TWTR","NFLX", "TSLA","BABA"};       // ticker entry here
+    String [] tickers = {"AAPL","IBM","JPM", "ORCL", "AMZN", "FB", "TWTR","NFLX", "TSLA","BABA","DIS"};
+            //"BAC","GILD", "AMGN", "PM", "MDT", "MCD", "BA", "SBUX", "UTX", "GS", "HON", "PCLN", "SPY", "IWM"};       // ticker entry here
 
-    public MainData (){
+
+    public void getData(){
+
         EClientSocket client = new EClientSocket(this);         //standard process
         client.eConnect(null, 7496, 0);                         //creates connection
-
         try
         {
-            Thread.sleep (2000);                                //paus until connection confirmed with klick
+            Thread.sleep (2000);                                //paus until connection confirmed with klick (pole vast vaja)
             while (! (client.isConnected()));
         } catch (Exception e) {
         }
@@ -39,11 +41,11 @@ public class MainData implements EWrapper{
         System.out.println("Info request took: "+time +" seconds");
 
 
-        arvutused();                                            //meetod arvutused
-        rsiArvutused();
+        //arvutused();                                            //meetod arvutused
+        //rsiArvutused();
 
         System.out.println("protsessi lõpp");
-        client.eDisconnect();                                   //disconnects here
+        //client.eDisconnect();                                   //disconnects here
     }
 
     public void dataReq(EClientSocket client){
@@ -67,7 +69,7 @@ public class MainData implements EWrapper{
             tickerID=tickerID+1;
         }
 
-        for (double i = 0; i < 100; i++) {
+        for (double i = 0; i < 350; i++) {
             try {
                 if (control== 0.0 || controlPrice == 0.0) {
                     Thread.sleep(100);
@@ -77,6 +79,12 @@ public class MainData implements EWrapper{
             } catch (Exception e) {
             }
         }
+    }
+    public void arvutused2() {
+        Arvutused arvutused = new Arvutused();
+        double pikkus = histPrices[1][1];
+        System.out.println("suvaline arv on "+pikkus);
+        arvutused.strategy1(histPrices,lastPrice);
     }
 
     public void arvutused(){
@@ -131,9 +139,9 @@ public class MainData implements EWrapper{
             }
             double RSI = 100 - (100/(1-summa3/summa4));
             //System.out.println(symbol + " RSI on " + RSI+"  "+ summa3 + "  "+summa4);
-            if (RSI< 30) {
+            if (RSI< 40) {
                 System.out.println("osta "+symbol +" RSI on ju "+ RSI);
-            } else if (RSI> 70) {
+            } else if (RSI> 60) {
                 System.out.println("müü "+symbol +" RSI on ju " + RSI);
             }
         }
@@ -394,7 +402,7 @@ public class MainData implements EWrapper{
     public void connectionClosed() {
 
     }
-    public static void main (String args[])
+   /* public static void main (String args[])
     {
         try
         {
@@ -406,6 +414,7 @@ public class MainData implements EWrapper{
         }
 
     }
+    */
 
 
 }
