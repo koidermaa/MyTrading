@@ -9,6 +9,7 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
@@ -59,6 +60,13 @@ public class UserInterface {
 
         Button strategy3 = new Button("VIX curve");
         pane.add(strategy3,3, 9);
+        strategy3.setOnAction(event ->  {
+            try {
+                new Futuurid();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
 
         return pane;
     }
