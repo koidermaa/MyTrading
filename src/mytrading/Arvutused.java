@@ -1,11 +1,14 @@
 package mytrading;
 
+import java.util.ArrayList;
+
 public class Arvutused extends MainData {
 
     public void strategy1(double [][]histPrices, double []lastPrice) {
-        System.out.println("algavad arvutused");
-        double pikkus= histPrices[1][1];
-        System.out.println("prooi number 2 on..."+pikkus);
+        ArrayList<String> buyTickers = new ArrayList<String>();
+        ArrayList<Double> buyPrices = new ArrayList<Double>();
+        ArrayList<String> sellTickers = new ArrayList<String>();
+        ArrayList<Double> sellPrices = new ArrayList<Double>();
 
         for (int j = 0; j <tickers.length ; j++) {
             double summa = 0;
@@ -19,7 +22,6 @@ public class Arvutused extends MainData {
             }
 
             keskmine = summa / histPrices[0].length;
-            //System.out.println("keskmine on "+ keskmine);
 
             for (int k = 0; k <histPrices[0].length ; k++) {
                 double element = (histPrices [tickerID][k] - keskmine)*(histPrices [tickerID][k] - keskmine);
@@ -32,14 +34,46 @@ public class Arvutused extends MainData {
             double minLimit = keskmine - 1.5*stdev;
 
             if (lastPrice[tickerID]< minLimit){
-                System.out.println("Osta "+ symbol + " aktsiat hinnaga "+ lastPrice[tickerID]);
+
+                buyTickers.add(symbol);
+                buyPrices.add(lastPrice[tickerID]);
+
             } else if (lastPrice[tickerID]> maxLimit){
-                System.out.println("Müü "+ symbol + " aktsiat hinnaga "+ lastPrice[tickerID]);
+
+                sellTickers.add(symbol);
+                sellPrices.add(lastPrice[tickerID]);
+
             }
 
-            //System.out.println("Keskmine hind aktsial " + symbol + " on " + keskmine + " ja stdev on "+ stdev + " viimane hind on " + lastPrice[tickerID]);
         }
+        UserInterface user = new UserInterface();
+        user.populate(buyTickers, buyPrices, sellTickers, sellPrices);
+
     }
 
+    public void strategy2(double [][]histPrices){
+        for (int j = 0; j <tickers.length ; j++) {
+            double summa3=0, summa4=0;
+            symbol = tickers[j];
+            tickerID = j;
+            for (int k = 0; k < 14; k++) {
+                int algusKoht = histPrices[0].length-14;
+                double vahe = histPrices[tickerID][algusKoht+k]-histPrices[tickerID][algusKoht+k-1];
+                if (vahe >= 0.0){
+                    summa3 += vahe;
+                }
+                if (vahe < 0.0){
+                    summa4 += vahe;
+                }
+            }
+            double RSI = 100 - (100/(1-summa3/summa4));
+            //System.out.println(symbol + " RSI on " + RSI+"  "+ summa3 + "  "+summa4);
+            if (RSI< 40) {
+                System.out.println("osta "+symbol +" RSI on ju "+ RSI);
+            } else if (RSI> 60) {
+                System.out.println("müü "+symbol +" RSI on ju " + RSI);
+            }
+        }
+    }
 
 }
