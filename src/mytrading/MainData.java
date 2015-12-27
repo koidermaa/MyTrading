@@ -9,15 +9,15 @@ import java.util.Vector;
 
 public class MainData implements EWrapper{
     private EClientSocket client = null;
-    double controlPrice =0.0, keskmine, stdev, control=0.0;
+    double controlPrice =0.0, average, stdev, control=0.0;
     int i =0;
 
-    double [][] histPrices = new double[11][30];                                      // first is no of tickers, second no of days
-    double [] lastPrice = new double [11];                                            // size is no of tickers
+    double [][] histPrices = new double[12][30];                                      // first is no of tickers, second no of days
+    double [] lastPrice = new double [12];                                            // size is no of tickers
     String symbol;
     int tickerID = 0;
-    String [] tickers = {"AAPL","IBM","JPM", "ORCL", "AMZN", "FB", "TWTR","NFLX", "TSLA","BABA","DIS"};
-            //"BAC","GILD", "AMGN", "PM", "MDT", "MCD", "BA", "SBUX", "UTX", "GS", "HON", "PCLN", "SPY", "IWM"};       // ticker entry here
+    String [] tickers = {"AAPL","IBM","JPM", "ORCL", "AMZN", "FB", "TWTR","NFLX", "TSLA","BABA","DIS","MCD"};
+            //"BAC","GILD", "AMGN", "PM", "MDT", "BA", "SBUX", "UTX", "GS", "HON", "PCLN", "SPY", "IWM"};       // ticker entry here
 
 
     public void getData(){
