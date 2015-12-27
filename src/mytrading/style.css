@@ -1,0 +1,24 @@
+.chart {
+     -fx-background-color:  #F8F8F8;
+}
+.chart-plot-background {
+    -fx-background-color: #F8F8F8;
+}
+.chart-alternative-row-fill {
+    -fx-fill: #F0F0F0 ;
+    -fx-stroke: transparent;
+}
+.chart-series-line {
+    -fx-stroke-width: 4px;
+    -fx-stroke: #0000CC;
+}
+
+.chart-line-symbol {
+    -fx-background-color: #0000CC, white;
+    -fx-background-radius: 4px;
+    -fx-padding: 4px;
+}
+.chart-title {
+  -fx-fond-weight: bold;
+  -fx-font-size: 1.8em;
+}
