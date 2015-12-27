@@ -28,6 +28,7 @@ public class Futuurid {
         };
         String []lastPrice = new String[8];
 
+        // Read the csv files into a string array
         for (int i = 0; i <8; i++) {
             URL cboe = new URL(urlList[i]);
             URLConnection gc = cboe.openConnection();
@@ -36,27 +37,34 @@ public class Futuurid {
             LinkedList<String[]> rows = new LinkedList<String[]>();
 
             while ((line = in.readLine()) != null) {
-                rows.add(line.split(","));
-
+                rows.add(line.split(","));              // split each row by comma (,)
             }
 
-            int pikkus =rows.size();
-            String[] proov=rows.get(pikkus-1);
-            lastPrice [i]= proov [5];
+            int length =rows.size();
+            String[] lastRow=rows.get(length-1);          // read the last row to a new string
+            lastPrice [i]= lastRow [5];                   // the 6th column in csv file was last price
             in.close();
         }
-
-        System.out.println(lastPrice[0]+" "+ lastPrice[1]+" "+lastPrice[2]+" "+ lastPrice[3]+" "+lastPrice[4]+" "+ lastPrice[5]+" "+lastPrice[6]+" "+ lastPrice[7]);
-
+        // Draw a graph of last prices
         drawGraph(lastPrice);
-
     }
 
     private void drawGraph(String[] lastPrice) {
+
+        // put string data into double values
+        double [] value = new double[8];
+        for (int i = 0; i <8; i++) {
+            value[i] = Double.parseDouble(lastPrice[i]);
+        }
+
         Stage stage = new Stage();
         stage.setTitle("VIX futures");
+
+        // graph example from   https://docs.oracle.com/javafx/2/charts/line-chart.htm
         final CategoryAxis xAxis = new CategoryAxis();
-        final NumberAxis yAxis = new NumberAxis(15,22,1);
+        double minSize= Math.round(value[0]-1.0);
+        double maxSize=Math.round(value[7]+1.0);
+        final NumberAxis yAxis = new NumberAxis(minSize,maxSize,1);
         xAxis.setLabel("Month");
 
         final LineChart<String,Number> lineChart = new LineChart<String,Number>(xAxis,yAxis);
@@ -66,23 +74,19 @@ public class Futuurid {
         XYChart.Series series = new XYChart.Series();
 
         String [] months = {"Jan", "Feb", "Mar", "Apr", "May", "June", "July","Aug"};
-        double [] value = new double[8];
-        for (int i = 0; i <8; i++) {
-            value[i] = Double.parseDouble(lastPrice[i]);
-        }
 
+        // Put data into graph series
         for (int i = 0; i <8; i++) {
             series.getData().add(new XYChart.Data(months[i], value[i]));
 
         }
-
-        Scene scene  = new Scene(lineChart,600,400);
         lineChart.getData().add(series);
 
+        Scene scene  = new Scene(lineChart,600,400);
+        scene.getStylesheets().add(Futuurid.class.getResource("style.css").toExternalForm());
         stage.setScene(scene);
+
         stage.show();
-
-
 
     }
 }
