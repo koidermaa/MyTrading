@@ -62,8 +62,8 @@ public class Futuurid {
 
         // graph example from   https://docs.oracle.com/javafx/2/charts/line-chart.htm
         final CategoryAxis xAxis = new CategoryAxis();
-        double minSize= Math.round(value[0]-1.0);
-        double maxSize=Math.round(value[7]+1.0);
+        double minSize= Math.round(value[1]-2.0);
+        double maxSize=Math.round(value[0]+1.0);
         final NumberAxis yAxis = new NumberAxis(minSize,maxSize,1);
         xAxis.setLabel("Month");
 
